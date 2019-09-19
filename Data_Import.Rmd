@@ -1,0 +1,143 @@
+---
+title: "Data_Import"
+author: "Nora Zakaria"
+date: "9/17/19"
+output: github_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+
+library(tidyverse)
+```
+
+## Load in a Dataset
+
+```{r}
+## reads in a dataset
+litters_data = read_csv("./data/FAS_litters.csv")
+litters_data = janitor::clean_names(litters_data)
+```
+
+```{r}
+pups_data = read_csv(file = "./data/FAS_pups.csv")
+pups_data = read_csv(file = "~/Data Science/Data_Wranging_I/data/FAS_litters.csv")
+```
+
+
+---
+title: "Data_Manipulation"
+author: "Nora Zakaria"
+date: "9/19/19"
+output: github_document
+---
+
+```{r}
+select(litters_data, group, litter_number)
+select(litters_data, group, litter_number, gd0_weight)
+select(litters_data, litter_number, gd0_weight, starts_with("pups"))
+
+select(litters_data, litter_number, group, gd0_weight)
+## The order that you list your variables matters and will be displayed first
+
+select(litters_data, litter_number, group, everything())
+## The everything function wil display every variable
+
+select(litters_data, -group)
+## This will delete only the group variable
+
+select(litters_data, litter_number, gd0_weight:pups_alive)
+## This : function will keep all columns between gd0_weight and pups_alive
+
+select(litters_data, GROUP = group, litter_number)
+## Rename the existing group variable to the new name GROUP
+
+rename(litters_data, GROUP = group)
+## To rename variables without selecting 
+```
+
+
+## Filtering
+
+```{r}
+filter(litters_data, group == "Con7")
+## Double == is a logical operator, keeps the rows for which the logical question is true
+
+filter(litters_data, gd_of_birth >= 20)
+
+filter(litters_data, pups_born_alive < 6)
+
+filter(litters_data, pups_born_alive < 6, group == "Con7")
+## Filters on two conditions
+
+filter(litters_data, group == "Con7" | group == "Mod8")
+## Vertical bar is for or, not used often
+
+filter(litters_data, group %in% c("Con7", "Mod8"))
+## A much better way to perform an or-type function
+
+filter(litters_data, pups_born_alive >=4, pups_born_alive <= 6)
+
+filter(litters_data, gd0_weight + gd18_weight < 70)
+## Can combine variables and filter based on that
+
+## don't do this:
+#filter(litters_data, !is.na(dg0_weight))
+
+drop_na(litters_data)
+# Will only give complete cases and drop anything else
+
+drop_na(litters_data, gd0_weight)
+# Will drop all with missing gd0_weight variable
+```
+
+
+## Mutate
+
+```{r}
+mutate(
+  litters_data, 
+  wt_gain = gd18_weight - gd0_weight,
+  group = str_to_lower(group))
+# Does an operation directly on the data in our dataset, and will add a column to the end of the dataset
+# You can modify existing variables
+```
+
+
+## Arrange
+
+```{r}
+arrange(litters_data, pups_born_alive)
+
+arrange(litters_data, desc(pups_born_alive))
+# Same but opposite order
+
+arrange(litters_data, pups_born_alive, gd0_weight)
+```
+
+
+## Piping
+
+```{r}
+litters_data = 
+  read_csv("./data/FAS_litters.csv") %>%
+  janitor::clean_names() %>%
+  select(-pups_survive) %>%
+  mutate(
+    wt_gain = gd18_weight - gd0_weight,
+    group = str_to_lower(group)) %>%
+  drop_na(gd0_weight)
+## Do it all together in one step!
+```
+
+Don't Worry about this right now:
+```{r}
+litters_data =
+  read_csv("./data/FAS_litters.csv") %>%
+  janitor::clean_names(dat = .) %>%
+  select(.data = ., -pups_survive) %>%
+  lm(gd0_weight ~ gd18_weight, data =.)
+## We will revisit linear models in a later class
+```
+
+
